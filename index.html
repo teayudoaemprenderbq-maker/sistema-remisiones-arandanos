@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Arándanos de Vida - Remisiones</title>
+  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+  <script src="[https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js](https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js)"></script>
+  <style>
+    /* Estilos específicos para emular datalist limpio y deshabilitar flechas de inputs numéricos */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+  <header class="bg-blue-900 text-white shadow-md px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <img src="[https://static.wixstatic.com/media/d0ce54_b23afa43d81f430dbe1c219e3f470f11~mv2.jpg](https://static.wixstatic.com/media/d0ce54_b23afa43d81f430dbe1c219e3f470f11~mv2.jpg)" alt="Logo Arándanos de Vida" class="h-14 w-14 rounded-full object-cover border-2 border-white bg-white">
+      <div>
+        <h1 class="text-xl font-bold tracking-wide">Arándanos de Vida</h1>
+        <p class="text-xs text-blue-200">NIT: 901994459 | Módulo de Gestión de Remisiones</p>
+      </div>
+    </div>
+    <div class="bg-blue-800 px-4 py-2 rounded-lg border border-blue-700 text-center">
+      <span class="text-xs uppercase block text-blue-300 font-semibold tracking-wider">Consecutivo Actual</span>
+      <span id="txt-consecutivo-header" class="text-xl font-mono font-bold text-emerald-400">Cargando...</span>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <section class="lg:col-span-5 space-y-6">
+      
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+          <h2 class="text-lg font-bold text-slate-700 flex items-center gap-2">
+            📝 Datos de la Remisión
+          </h2>
+          <button id="btn-nueva-remision" onclick="solicitarNuevaRemision()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-md text-xs font-semibold transition flex items-center gap-1">
+            🔄 Nueva Remisión
+          </button>
+        </div>
+
+        <div id="status-alert" class="hidden mb-4 p-3 rounded-md text-sm"></div>
+
+        <form id="form-remision" onsubmit="event.preventDefault();">
+          
+          <div class="mb-5">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Buscar y Seleccionar Cliente *</label>
+            <input type="text" id="input-cliente" list="dl-clientes" placeholder="Escriba el nombre o NIT del cliente..." class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+            <datalist id="dl-clientes"></datalist>
+            
+            <div class="mt-2 grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded border border-slate-200 text-slate-600">
+              <div><span class="font-medium text-slate-400 block">NIT:</span> <span id="lbl-c-nit">-</span></div>
+              <div><span class="font-medium text-slate-400 block">Teléfono:</span> <span id="lbl-c-telefono">-</span></div>
+              <div class="col-span-2"><span class="font-medium text-slate-400 block">Dirección:</span> <span id="lbl-c-direccion">-</span></div>
+              <div class="col-span-2"><span class="font-medium text-slate-400 block">Correo:</span> <span id="lbl-c-correo">-</span></div>
+            </div>
+          </div>
+
+          <div class="mb-5">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Buscar y Seleccionar Producto *</label>
+            <input type="text" id="input-producto" list="dl-productos" placeholder="Escriba el nombre del producto..." class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+            <datalist id="dl-productos"></datalist>
+
+            <div class="mt-2 grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded border border-slate-200 text-slate-600">
+              <div><span class="font-medium text-slate-400 block">Precio Unitario:</span> <span id="lbl-p-precio" class="font-semibold text-slate-700">$0.00</span></div>
+              <div><span class="font-medium text-slate-400 block">Unidad de Medida:</span> <span id="lbl-p-unidad">-</span></div>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <label for="input-cantidad" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Cantidad a Remitir *</label>
+            <input type="number" id="input-cantidad" min="1" step="any" placeholder="Ej. 10" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold">
+          </div>
+
+          <button type="button" id="btn-generar" onclick="procesarGuardadoRemision()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md shadow transition flex items-center justify-center gap-2 text-sm uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg id="spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <span id="btn-text">Generar Guardado y PDF</span>
+          </button>
+        </form>
+      </div>
+
+    </section>
+
+    <section class="lg:col-span-7 flex flex-col space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+          👁️ Vista Previa en Tiempo Real
+        </h2>
+        <button id="btn-descargar-pdf" onclick="exportarAPDF()" disabled class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md text-xs font-bold shadow opacity-50 cursor-not-allowed transition flex items-center gap-2">
+          📥 Descargar Archivo PDF
+        </button>
+      </div>
+
+      <div class="bg-white p-8 rounded-xl shadow-lg border border-slate-300 min-h-[650px] flex flex-col justify-between overflow-hidden" id="area-pdf">
+        
+        <div>
+          <div class="flex justify-between items-start border-b-2 border-blue-900 pb-4">
+            <div class="flex gap-4">
+              <img src="[https://static.wixstatic.com/media/d0ce54_b23afa43d81f430dbe1c219e3f470f11~mv2.jpg](https://static.wixstatic.com/media/d0ce54_b23afa43d81f430dbe1c219e3f470f11~mv2.jpg)" alt="Logo" class="h-16 w-16 rounded-full object-cover bg-white border border-slate-200">
+              <div class="text-xs text-slate-600 space-y-0.5">
+                <h3 class="text-base font-black text-blue-900 uppercase">Arándanos de Vida</h3>
+                <p><span class="font-bold">NIT:</span> 901994459</p>
+                <p><span class="font-bold">Dirección:</span> Cra 65 #75 - 30 Local 7, Barranquilla</p>
+                <p><span class="font-bold">Teléfono:</span> 3052790504</p>
+                <p><span class="font-bold">Correo:</span> arandanosdevidacol@gmail.com</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="bg-blue-900 text-white px-4 py-1.5 rounded font-mono font-bold text-sm tracking-wide inline-block mb-1">
+                REMISION N° <span id="view-consecutivo">000</span>
+              </div>
+              <p class="text-[10px] text-slate-400 font-medium uppercase">Documento de Remisión</p>
+              <p class="text-xs text-slate-600 mt-1 font-semibold"><span class="font-normal text-slate-400">Fecha/Hora:</span> <span id="view-fecha">-</span></p>
+            </div>
+          </div>
+
+          <div class="my-6 bg-slate-50 p-4 rounded-lg border border-slate-200 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+            <div class="col-span-2 mb-1 border-b border-slate-200 pb-1 text-blue-900 font-bold uppercase tracking-wider text-[10px]">
+              Información del Cliente
+            </div>
+            <p class="col-span-2 text-sm font-bold text-slate-800 mb-0.5" id="view-c-nombre">Seleccione un cliente en el formulario...</p>
+            <p><span class="text-slate-400 font-medium">NIT / CC:</span> <span id="view-c-nit" class="text-slate-700">-</span></p>
+            <p><span class="text-slate-400 font-medium">Teléfono:</span> <span id="view-c-telefono" class="text-slate-700">-</span></p>
+            <p class="col-span-2"><span class="text-slate-400 font-medium">Dirección:</span> <span id="view-c-direccion" class="text-slate-700">-</span></p>
+            <p class="col-span-2"><span class="text-slate-400 font-medium">Correo Electrónico:</span> <span id="view-c-correo" class="text-slate-700">-</span></p>
+          </div>
+
+          <table class="w-full text-left border-collapse text-xs mt-4">
+            <thead>
+              <tr class="bg-blue-900 text-white uppercase text-[10px] tracking-wider">
+                <th class="p-2.5 rounded-l font-bold">Ref / ID</th>
+                <th class="p-2.5 font-bold">Descripción del Producto</th>
+                <th class="p-2.5 text-center font-bold">Cant.</th>
+                <th class="p-2.5 text-center font-bold">Unidad</th>
+                <th class="p-2.5 text-right font-bold">Precio Unit.</th>
+                <th class="p-2.5 text-right rounded-r font-bold">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200" id="view-tabla-items">
+              <tr id="row-empty">
+                <td colspan="6" class="p-6 text-center text-slate-400 italic">No se ha cargado ningún producto válido.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-8 pt-4 border-t border-slate-100 grid grid-cols-12 gap-4 items-end">
+          
+          <div class="col-span-7 grid grid-cols-2 gap-4 pb-2 text-[10px] text-slate-500">
+            <div class="space-y-8">
+              <div class="border-b border-slate-400 w-full h-8"></div>
+              <p class="text-center font-medium">Despachado / Autorizado</p>
+            </div>
+            <div class="space-y-8">
+              <div class="border-b border-slate-400 w-full h-8"></div>
+              <p class="text-center font-medium">Recibido Conforme Cliente</p>
+            </div>
+            <div class="col-span-2 text-[9px] text-slate-400 mt-2 italic text-left">
+              * Esta remisión constituye un soporte de entrega física de mercancía.
+            </div>
+          </div>
+
+          <div class="col-span-5 bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1.5 text-xs text-right">
+            <div class="flex justify-between text-slate-500">
+              <span class="font-medium">Subtotal Neto:</span>
+              <span id="view-subtotal" class="font-mono font-semibold text-slate-700">$0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-500">
+              <span class="font-medium">IVA Liquidado (19%):</span>
+              <span id="view-iva" class="font-mono font-semibold text-slate-700">$0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-800 border-t border-slate-300 pt-1.5 text-sm">
+              <span class="font-bold text-blue-900">TOTAL GENERAL:</span>
+              <span id="view-total" class="font-mono font-black text-blue-900">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center text-[9px] text-slate-300 uppercase tracking-widest font-bold mt-4 pt-1 border-t border-slate-100">
+          Original - Cliente / Documento No Contable
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Variables de estado local global
+    let cacheClientes = [];
+    let cacheProductos = [];
+    let consecutivoActualValido = 0;
+    
+    let clienteSeleccionado = null;
+    let productoSeleccionado = null;
+
+    // Inicializador al cargar la ventana del navegador
+    window.onload = function() {
+      cargarConsecutivoInicial();
+      inicializarDatosEstructurales();
+      configurarManejadoresEventos();
+    };
+
+    /**
+     * Consume el consecutivo del backend de Apps Script
+     */
+    function cargarConsecutivoInicial() {
+      google.script.run
+        .withSuccessHandler(function(consecutivo) {
+          consecutivoActualValido = parseInt(consecutivo, 10);
+          actualizarUIConsecutivo(consecutivoActualValido);
+        })
+        .withFailureHandler(function(err) {
+          mostrarAlerta("Error al cargar consecutivo: " + err.message, "error");
+        })
+        .obtenerUltimoConsecutivo();
+    }
+
+    /**
+     * Consume las colecciones maestras de Clientes y Productos
+     */
+    function inicializarDatosEstructurales() {
+      // Clientes
+      google.script.run
+        .withSuccessHandler(function(clientes) {
+          cacheClientes = clientes;
+          const dl = document.getElementById('dl-clientes');
+          dl.innerHTML = "";
+          clientes.forEach(c => {
+            let opt = document.createElement('option');
+            opt.value = c.nombre;
+            opt.innerText = "NIT: " + c.nit;
+            dl.appendChild(opt);
+          });
+        })
+        .withFailureHandler(function(err) {
+          mostrarAlerta("Error cargando clientes: " + err.message, "error");
+        })
+        .obtenerClientes();
+
+      // Productos
+      google.script.run
+        .withSuccessHandler(function(productos) {
+          cacheProductos = productos;
+          const dl = document.getElementById('dl-productos');
+          dl.innerHTML = "";
+          productos.forEach(p => {
+            let opt = document.createElement('option');
+            opt.value = p.nombre;
+            opt.innerText = "Ref: " + p.id + " - $" + p.precio_unitario;
+            dl.appendChild(opt);
+          });
+        })
+        .withFailureHandler(function(err) {
+          mostrarAlerta("Error cargando productos: " + err.message, "error");
+        })
+        .obtenerProductos();
+    }
+
+    /**
+     * Vincula los listeners de eventos para cálculos dinámicos en vivo
+     */
+    function configurarManejadoresEventos() {
+      // Evento Cliente
+      document.getElementById('input-cliente').addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        clienteSeleccionado = cacheClientes.find(c => c.nombre.toLowerCase() === query.toLowerCase());
+        
+        if (clienteSeleccionado) {
+          document.getElementById('lbl-c-nit').innerText = clienteSeleccionado.nit || '-';
+          document.getElementById('lbl-c-telefono').innerText = clienteSeleccionado.telefono || '-';
+          document.getElementById('lbl-c-direccion').innerText = clienteSeleccionado.direccion || '-';
+          document.getElementById('lbl-c-correo').innerText = clienteSeleccionado.correo || '-';
+          
+          // Sincronizar espejo de Vista Previa
+          document.getElementById('view-c-nombre').innerText = clienteSeleccionado.nombre;
+          document.getElementById('view-c-nit').innerText = clienteSeleccionado.nit || '-';
+          document.getElementById('view-c-telefono').innerText = clienteSeleccionado.telefono || '-';
+          document.getElementById('view-c-direccion').innerText = clienteSeleccionado.direccion || '-';
+          document.getElementById('view-c-correo').innerText = clienteSeleccionado.correo || '-';
+        } else {
+          limpiarEspejoClienteUI();
+        }
+      });
+
+      // Evento Producto
+      document.getElementById('input-producto').addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        productoSeleccionado = cacheProductos.find(p => p.nombre.toLowerCase() === query.toLowerCase());
+        
+        if (productoSeleccionado) {
+          const precio = parseFloat(productoSeleccionado.precio_unitario) || 0;
+          document.getElementById('lbl-p-precio').innerText = formatearMoneda(precio);
+          document.getElementById('lbl-p-unidad').innerText = productoSeleccionado.unidad || 'Unidades';
+          ejecutarCalculosFinancieros();
+        } else {
+          limpiarEspejoProductoUI();
+        }
+      });
+
+      // Evento Cantidad
+      document.getElementById('input-cantidad').addEventListener('input', ejecutarCalculosFinancieros);
+    }
+
+    /**
+     * Realiza los cálculos automáticos matemáticos en tiempo real
+     */
+    function ejecutarCalculosFinancieros() {
+      const cantidad = parseFloat(document.getElementById('input-cantidad').value) || 0;
+      
+      if (productoSeleccionado && cantidad > 0) {
+        const precio = parseFloat(productoSeleccionado.precio_unitario) || 0;
+        const subtotal = cantidad * precio;
+        const iva = subtotal * 0.19;
+        const total = subtotal + iva;
+
+        // Renderizar en la tabla de vista previa
+        const tbody = document.getElementById('view-tabla-items');
+        tbody.innerHTML = `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-2.5 font-mono text-slate-500">${productoSeleccionado.id || 'N/A'}</td>
+            <td class="p-2.5 font-medium text-slate-800">${productoSeleccionado.nombre}</td>
+            <td class="p-2.5 text-center font-semibold text-slate-700">${cantidad}</td>
+            <td class="p-2.5 text-center text-slate-500">${productoSeleccionado.unidad || 'U'}</td>
+            <td class="p-2.5 text-right font-mono">${formatearMoneda(precio)}</td>
+            <td class="p-2.5 text-right font-mono font-bold text-slate-900">${formatearMoneda(subtotal)}</td>
+          </tr>
+        `;
+
+        // Renderizar bloques de totales
+        document.getElementById('view-subtotal').innerText = formatearMoneda(subtotal);
+        document.getElementById('view-iva').innerText = formatearMoneda(iva);
+        document.getElementById('view-total').innerText = formatearMoneda(total);
+      } else {
+        // Reset tabla si no hay datos consolidados válidos
+        document.getElementById('view-tabla-items').innerHTML = `
+          <tr id="row-empty">
+            <td colspan="6" class="p-6 text-center text-slate-400 italic">No se ha cargado ningún producto válido.</td>
+          </tr>
+        `;
+        document.getElementById('view-subtotal').innerText = "$0.00";
+        document.getElementById('view-iva').innerText = "$0.00";
+        document.getElementById('view-total').innerText = "$0.00";
+      }
+    }
+
+    /**
+     * Gestiona el envío de la remisión al ecosistema de Sheets
+     */
+    function procesarGuardadoRemision() {
+      const cantidad = parseFloat(document.getElementById('input-cantidad').value) || 0;
+
+      // Validaciones lógicas rigurosas
+      if (!clienteSeleccionado) {
+        mostrarAlerta("Debe seleccionar un cliente registrado válido de la lista integrada.", "warning");
+        return;
+      }
+      if (!productoSeleccionado) {
+        mostrarAlerta("Debe seleccionar un producto registrado válido de la lista integrada.", "warning");
+        return;
+      }
+      if (cantidad <= 0 || isNaN(cantidad)) {
+        mostrarAlerta("La cantidad a remitir debe ser un factor numérico estrictamente mayor a cero.", "warning");
+        return;
+      }
+
+      setCargando(true);
+      ocultarAlerta();
+
+      // Formateo de tiempos local colombiano
+      const ahora = new Date();
+      const fechaFormateada = ahora.toLocaleDateString('es-CO') + ' ' + ahora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('view-fecha').innerText = fechaFormateada;
+
+      const precio = parseFloat(productoSeleccionado.precio_unitario) || 0;
+      const subtotal = cantidad * precio;
+      const iva = subtotal * 0.19;
+      const total = subtotal + iva;
+
+      // Estructura DTO de envío
+      const payload = {
+        consecutivo: "REM-" + String(consecutivoActualValido).padStart(4, '0'),
+        fecha: fechaFormateada,
+        cliente_id: clienteSeleccionado.id,
+        cliente_nombre: clienteSeleccionado.nombre,
+        cliente_nit: clienteSeleccionado.nit,
+        cliente_direccion: clienteSeleccionado.direccion,
+        cliente_telefono: clienteSeleccionado.telefono,
+        producto_id: productoSeleccionado.id,
+        producto_nombre: productoSeleccionado.nombre,
+        cantidad: cantidad,
+        precio_unitario: precio,
+        subtotal: subtotal,
+        iva_19: iva,
+        total: total,
+        estado: 'Activa'
+      };
+
+      google.script.run
+        .withSuccessHandler(function(consecutivoDevuelto) {
+          setCargando(false);
+          mostrarAlerta(`Remisión guardada exitosamente bajo el consecutivo legal ${payload.consecutivo}. Proceda a descargar el PDF.`, "success");
+          
+          // Habilitar el módulo de extracción PDF
+          const btnPdf = document.getElementById('btn-descargar-pdf');
+          btnPdf.removeAttribute('disabled');
+          btnPdf.classList.remove('opacity-50', 'cursor-not-allowed');
+
+          // Bloquear campos de edición para forzar control de flujo consciente
+          document.getElementById('btn-generar').disabled = true;
+          
+          // Auto-ejecutar renderizado y descarga del PDF inmediato como requiere el flujo técnico
+          exportarAPDF();
+        })
+        .withFailureHandler(function(err) {
+          setCargando(false);
+          mostrarAlerta("Falla crítica en base de datos: " + err.message, "error");
+        })
+        .guardarRemision(payload);
+    }
+
+    /**
+     * Ejecuta el incremento del consecutivo base y limpia la interfaz
+     */
+    function solicitarNuevaRemision() {
+      ocultarAlerta();
+      google.script.run
+        .withSuccessHandler(function(nuevoConsecutivo) {
+          consecutivoActualValido = parseInt(nuevoConsecutivo, 10);
+          actualizarUIConsecutivo(consecutivoActualValido);
+          
+          // Reset de Formulario Operativo
+          document.getElementById('form-remision').reset();
+          clienteSeleccionado = null;
+          productoSeleccionado = null;
+          
+          limpiarEspejoClienteUI();
+          limpiarEspejoProductoUI();
+          ejecutarCalculosFinancieros();
+
+          // Restaurar estados de botones transaccionales
+          document.getElementById('btn-generar').disabled = false;
+          
+          const btnPdf = document.getElementById('btn-descargar-pdf');
+          btnPdf.setAttribute('disabled', 'true');
+          btnPdf.classList.add('opacity-50', 'cursor-not-allowed');
+          
+          mostrarAlerta("Campos limpios. Listo para procesar la siguiente remisión consecutiva.", "success");
+        })
+        .withFailureHandler(function(err) {
+          mostrarAlerta("Error al actualizar consecutivo global: " + err.message, "error");
+        })
+        .incrementarConsecutivo();
+    }
+
+    /**
+     * Descarga el PDF usando la librería externa html2pdf con configuraciones avanzadas CORS
+     */
+    function exportarAPDF() {
+      const element = document.getElementById('area-pdf');
+      const tagConsecutivo = "REM-" + String(consecutivoActualValido).padStart(4, '0');
+      
+      const opcionesConfig = {
+        margin:       [12, 12, 12, 12],
+        filename:     `Remision_Arandanos_${tagConsecutivo}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { 
+          scale: 2.5, 
+          useCORS: true, 
+          logging: false 
+        },
+        jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opcionesConfig).from(element).save();
+    }
+
+    // UTILITARIOS DE CONTROL DE INTERFAZ (HELPERS)
+    function actualizarUIConsecutivo(num) {
+      const codificado = "REM-" + String(num).padStart(4, '0');
+      document.getElementById('txt-consecutivo-header').innerText = codificado;
+      document.getElementById('view-consecutivo').innerText = String(num).padStart(4, '0');
+    }
+
+    function limpiarEspejoClienteUI() {
+      document.getElementById('lbl-c-nit').innerText = '-';
+      document.getElementById('lbl-c-telefono').innerText = '-';
+      document.getElementById('lbl-c-direccion').innerText = '-';
+      document.getElementById('lbl-c-correo').innerText = '-';
+      document.getElementById('view-c-nombre').innerText = 'Seleccione un cliente en el formulario...';
+      document.getElementById('view-c-nit').innerText = '-';
+      document.getElementById('view-c-telefono').innerText = '-';
+      document.getElementById('view-c-direccion').innerText = '-';
+      document.getElementById('view-c-correo').innerText = '-';
+    }
+
+    function limpiarEspejoProductoUI() {
+      document.getElementById('lbl-p-precio').innerText = '$0.00';
+      document.getElementById('lbl-p-unidad').innerText = '-';
+    }
+
+    function formatearMoneda(valor) {
+      return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(valor);
+    }
+
+    function setCargando(estado) {
+      const btn = document.getElementById('btn-generar');
+      const spinner = document.getElementById('spinner');
+      const text = document.getElementById('btn-text');
+      
+      if (estado) {
+        btn.disabled = true;
+        spinner.classList.remove('hidden');
+        text.innerText = "Escribiendo en base de datos...";
+      } else {
+        btn.disabled = false;
+        spinner.classList.add('hidden');
+        text.innerText = "Generar Guardado y PDF";
+      }
+    }
+
+    function mostrarAlerta(mensaje, tipo) {
+      const alertDiv = document.getElementById('status-alert');
+      alertDiv.className = "mb-4 p-3 rounded-md text-sm font-semibold ";
+      alertDiv.innerText = mensaje;
+      
+      if (tipo === 'success') alertDiv.className += "bg-emerald-50 text-emerald-800 border border-emerald-200";
+      if (tipo === 'warning') alertDiv.className += "bg-amber-50 text-amber-800 border border-amber-200";
+      if (tipo === 'error') alertDiv.className += "bg-rose-50 text-rose-800 border border-rose-200";
+      
+      alertDiv.classList.remove('hidden');
+    }
+
+    function ocultarAlerta() {
+      document.getElementById('status-alert').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
